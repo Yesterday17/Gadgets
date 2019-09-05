@@ -1,0 +1,96 @@
+{
+  "inbounds": [
+    {
+      "port": 1080,
+      "protocol": "socks",
+      "sniffing": {
+        "enabled": true,
+        "destOverride": ["http", "tls"]
+      },
+      "settings": {
+        "auth": "noauth"
+      }
+    },
+    {
+      "port": 1081,
+      "protocol": "http"
+    }
+  ],
+  "outbounds": [
+    {
+      // FQ 用
+      "protocol": "vmess",
+      "settings": {
+        "vnext": [
+          {
+            "address": "DOMAIN",
+            "port": "PORT",
+            "users": [
+              {
+                "id": "SSID",
+                "alterId": 10
+              }
+            ]
+          }
+        ]
+      },
+      "streamSettings": {
+        "network": "mkcp",
+        "kcpSettings": {
+          "downlinkCapacity": 100,
+          "congestion": true,
+          "header": {
+            "type": "wechat-video"
+          }
+        }
+      }
+    },
+    {
+      // 国内用
+      "protocol": "shadowsocks",
+      "settings": {
+        "servers": [
+          {
+            "address": "DOMAIN",
+            "method": "aes-128-cfb",
+            "password": "PASSWORD",
+            "port": "PORT"
+          }
+        ]
+      },
+      "tag": "cn"
+    },
+    {
+      // 直连
+      "protocol": "freedom",
+      "settings": {},
+      "tag": "direct"
+    }
+  ],
+  "routing": {
+    // 这里使用 IPIfNonMatch 以对校内的域名直连，避免远程 DNS
+    "domainStrategy": "IPIfNonMatch",
+    "rules": [
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "domain": ["domain:jlu.edu.cn"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "direct",
+        "ip": ["geoip:private"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "cn",
+        "domain": ["geosite:cn"]
+      },
+      {
+        "type": "field",
+        "outboundTag": "cn",
+        "ip": ["geoip:cn"]
+      }
+    ]
+  }
+}
